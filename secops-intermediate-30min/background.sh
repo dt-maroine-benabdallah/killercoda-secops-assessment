@@ -38,20 +38,20 @@ EOF
 cat > /usr/local/bin/score <<'EOF'
 #!/bin/bash
 R=/var/lib/secops-lab
-labels=("Sécurité : SFTP attaqué" "Sécurité : compte trop puissant" "Réseau   : service injoignable" "Bonus    : CSR et certificat")
-max=(2 2 2 5)
+labels=("Sécurité : SFTP attaqué" "Sécurité : compte trop puissant" "Réseau   : service injoignable" "IaC      : revue Terraform" "Bonus    : CSR et certificat")
+max=(2 2 2 2 5)
 start=$(cat $R/start 2>/dev/null || date +%s)
 echo "Temps écoulé : $(( ($(date +%s) - start) / 60 )) min"
 echo
 core=0; bonus=0
-for i in 1 2 3 4; do
+for i in 1 2 3 4 5; do
   r=$(cat $R/step$i 2>/dev/null || echo "-")
   p=${r%%/*}; [ "$r" = "-" ] && p=0
-  if [ "$i" -le 3 ]; then core=$((core+p)); else bonus=$p; fi
+  if [ "$i" -le 4 ]; then core=$((core+p)); else bonus=$p; fi
   printf "Étape %s  %-32s %s/%s\n" "$i" "${labels[$((i-1))]}" "$p" "${max[$((i-1))]}"
 done
 echo
-echo "Score socle : $core/6"
+echo "Score socle : $core/8"
 echo "Bonus       : $bonus/5"
 EOF
 chmod +x /usr/local/bin/score
@@ -115,12 +115,17 @@ done >> "$LOG"
 # --- Étape 2 : compte deploy trop puissant ---------------------------------------
 id sysadmin >/dev/null 2>&1 || useradd -m -s /bin/bash -G sudo -c "Administrateur" sysadmin
 id deploy >/dev/null 2>&1 || useradd -m -s /bin/bash -c "Compte de déploiement" deploy
+cat > /usr/local/bin/restart-inventory.sh <<'RSEOF'
+#!/bin/bash
+systemctl restart inventory
+RSEOF
+chown deploy:deploy /usr/local/bin/restart-inventory.sh
+chmod 755 /usr/local/bin/restart-inventory.sh
 cat > /etc/sudoers.d/40-deploy <<'SUDOEOF'
-# Compte de deploiement : redemarrage de inventory + edition de sa configuration
-deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart inventory, /usr/bin/vim /etc/inventory/app.conf
+# Compte de deploiement
+deploy ALL=(root) NOPASSWD: /usr/local/bin/restart-inventory.sh
 SUDOEOF
 chmod 440 /etc/sudoers.d/40-deploy
-mkdir -p /etc/inventory; echo "port=8081" > /etc/inventory/app.conf
 visudo -cf /etc/sudoers.d/40-deploy >/dev/null
 
 # --- Étape 3 : pare-feu ------------------------------------------------------------
@@ -146,7 +151,94 @@ done
 iptables -A INPUT -p tcp --dport 8081 -j DROP
 iptables -A INPUT -p tcp --dport 9200 -m comment --comment "acces a la base interne interdit" -j DROP
 
-# --- Étape 4 : CA interne + portail HTTPS --------------------------------------
+# --- Étape 4 : plan Terraform à relire ---------------------------------------------
+mkdir -p /root/iac
+cat > /root/iac/plan.txt <<'PLANEOF'
+Terraform used the selected providers to generate the following execution plan.
+Resource actions are indicated with the following symbols:
+  + create
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # aws_lb.app will be updated in-place
+  ~ resource "aws_lb" "app" {
+        id                         = "arn:aws:elasticloadbalancing:eu-west-3:123456789012:loadbalancer/app/prod-app/50dc6c495c0c9188"
+      ~ idle_timeout               = 60 -> 120
+        name                       = "prod-app"
+        # (14 unchanged attributes hidden)
+    }
+
+  # aws_security_group_rule.alb_https will be created
+  + resource "aws_security_group_rule" "alb_https" {
+      + cidr_blocks              = [
+          + "0.0.0.0/0",
+        ]
+      + description              = "HTTPS public vers le load balancer"
+      + from_port                = 443
+      + protocol                 = "tcp"
+      + security_group_id        = "sg-0a1b2c3d4e5f60718"
+      + to_port                  = 443
+      + type                     = "ingress"
+    }
+
+  # aws_security_group_rule.rds_ingress will be updated in-place
+  ~ resource "aws_security_group_rule" "rds_ingress" {
+      ~ cidr_blocks              = [
+          - "10.20.0.0/16",
+          + "0.0.0.0/0",
+        ]
+        description              = "PostgreSQL depuis le reseau applicatif"
+        from_port                = 5432
+        id                       = "sgrule-2873144915"
+        protocol                 = "tcp"
+        security_group_id        = "sg-0f9e8d7c6b5a43210"
+        to_port                  = 5432
+        type                     = "ingress"
+    }
+
+  # aws_instance.worker will be updated in-place
+  ~ resource "aws_instance" "worker" {
+        id                           = "i-0123456789abcdef0"
+      ~ instance_type                = "t3.small" -> "t3.medium"
+      ~ tags                         = {
+          ~ "CostCenter" = "ops" -> "platform"
+            # (2 unchanged elements hidden)
+        }
+        # (28 unchanged attributes hidden)
+    }
+
+  # aws_s3_bucket.exports will be created
+  + resource "aws_s3_bucket" "exports" {
+      + acl                         = "private"
+      + bucket                      = "dilitrust-prod-exports"
+      + force_destroy               = false
+      + id                          = (known after apply)
+    }
+
+  # aws_s3_bucket_public_access_block.exports will be created
+  + resource "aws_s3_bucket_public_access_block" "exports" {
+      + block_public_acls           = true
+      + block_public_policy         = true
+      + bucket                      = (known after apply)
+      + ignore_public_acls          = true
+      + restrict_public_buckets     = true
+    }
+
+  # aws_s3_bucket_server_side_encryption_configuration.exports will be created
+  + resource "aws_s3_bucket_server_side_encryption_configuration" "exports" {
+      + bucket = (known after apply)
+      + rule {
+          + apply_server_side_encryption_by_default {
+              + sse_algorithm = "aws:kms"
+            }
+        }
+    }
+
+Plan: 3 to add, 3 to change, 0 to destroy.
+PLANEOF
+
+# --- Étape 5 : CA interne + portail HTTPS --------------------------------------
 mkdir -p /opt/ca /etc/portal-tls
 openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
   -keyout /opt/ca/ca.key -out /opt/ca/ca.crt \
