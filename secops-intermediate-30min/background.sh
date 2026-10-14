@@ -38,7 +38,7 @@ EOF
 cat > /usr/local/bin/score <<'EOF'
 #!/bin/bash
 R=/var/lib/secops-lab
-labels=("Sécurité : SFTP attaqué" "Sécurité : compte admin" "Réseau   : service injoignable" "Bonus    : CSR et certificat")
+labels=("Sécurité : SFTP attaqué" "Sécurité : compte trop puissant" "Réseau   : service injoignable" "Bonus    : CSR et certificat")
 max=(2 2 2 5)
 start=$(cat $R/start 2>/dev/null || date +%s)
 echo "Temps écoulé : $(( ($(date +%s) - start) / 60 )) min"
@@ -112,10 +112,16 @@ for i in $(seq 1 180); do
   fi
 done >> "$LOG"
 
-# --- Étape 2 : compte admin illégitime ------------------------------------------
+# --- Étape 2 : compte deploy trop puissant ---------------------------------------
 id sysadmin >/dev/null 2>&1 || useradd -m -s /bin/bash -G sudo -c "Administrateur" sysadmin
 id deploy >/dev/null 2>&1 || useradd -m -s /bin/bash -c "Compte de déploiement" deploy
-id tmp-support >/dev/null 2>&1 || useradd -m -s /bin/bash -G sudo -c "Support temporaire" tmp-support
+cat > /etc/sudoers.d/40-deploy <<'SUDOEOF'
+# Compte de deploiement : redemarrage de inventory + edition de sa configuration
+deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart inventory, /usr/bin/vim /etc/inventory/app.conf
+SUDOEOF
+chmod 440 /etc/sudoers.d/40-deploy
+mkdir -p /etc/inventory; echo "port=8081" > /etc/inventory/app.conf
+visudo -cf /etc/sudoers.d/40-deploy >/dev/null
 
 # --- Étape 3 : pare-feu ------------------------------------------------------------
 mkdir -p /srv/inventory /srv/internal-db
