@@ -1,6 +1,6 @@
 {
   "title": "Évaluation SecOps intermédiaire (30 min)",
-  "description": "Trois situations de sécurité et de réseau à corriger en une action chacune, plus un bonus sur les certificats. Vérification automatique et score final.",
+  "description": "Trois situations de sécurité et de réseau à corriger en une action chacune, une revue de plan Terraform, plus un bonus sur les certificats. Vérification automatique et score final.",
   "details": {
     "intro": {
       "text": "intro.md",
@@ -11,7 +11,8 @@
       { "title": "Sécurité : un SFTP exposé qui se fait attaquer", "text": "step1/text.md", "verify": "step1/verify.sh" },
       { "title": "Sécurité : un compte de déploiement trop puissant", "text": "step2/text.md", "verify": "step2/verify.sh" },
       { "title": "Réseau : service injoignable", "text": "step3/text.md", "verify": "step3/verify.sh" },
-      { "title": "Bonus : CSR et certificat signé par la CA interne", "text": "step4/text.md", "verify": "step4/verify.sh" }
+      { "title": "IaC : revue d'un plan Terraform", "text": "step4/text.md", "verify": "step4/verify.sh" },
+      { "title": "Bonus : CSR et certificat signé par la CA interne", "text": "step5/text.md", "verify": "step5/verify.sh" }
     ],
     "finish": { "text": "finish.md" }
   },
