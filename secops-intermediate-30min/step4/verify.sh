@@ -1,21 +1,17 @@
 #!/bin/bash
 . /usr/local/lib/secops-lab/lib.sh
 step_begin 4
-# Un compte UID 0 autre que root doit etre supprime, ou neutralise (verrouille + shell nologin/false)
-c1() {
-  while IFS=: read -r u _ id _ _ _ sh; do
-    [ "$id" = 0 ] && [ "$u" != root ] || continue
-    pw=$(awk -F: -v u="$u" '$1==u{print $2}' /etc/shadow)
-    case "$pw" in '!'*|'*'*) ;; *) return 1 ;; esac
-    case "$sh" in */nologin|*/false) ;; *) return 1 ;; esac
-  done < /etc/passwd
-  return 0
-}
-c2() { [ -z "$(find /usr/local /opt /tmp /var/tmp /home /srv -xdev -perm -4000 -type f 2>/dev/null)" ]; }
-c3() { grep -q 'admin@bastion.lab' /root/.ssh/authorized_keys && ! grep -q '203.0.113.50' /root/.ssh/authorized_keys; }
-c4() { ! grep -rEqs '^[[:space:]]*www-data' /etc/sudoers /etc/sudoers.d && visudo -c; }
-chk "pas de second compte UID 0 actif" c1
-chk "pas de binaire SUID suspect" c2
-chk "clé SSH illégitime retirée, légitime conservée" c3
-chk "sudo www-data retiré, sudoers valide" c4
+CA=/opt/ca/ca.crt
+SC=$(openssl s_client -connect 127.0.0.1:8443 -servername portal.lab.internal -CAfile "$CA" -verify_hostname portal.lab.internal </dev/null 2>&1)
+LEAF=$(openssl s_client -connect 127.0.0.1:8443 -servername portal.lab.internal </dev/null 2>/dev/null | openssl x509 2>/dev/null)
+c1() { [ -s /root/portal.csr ] && openssl req -in /root/portal.csr -noout -verify 2>&1 | grep -qi 'verify ok' && T=$(openssl req -in /root/portal.csr -noout -text) && echo "$T" | grep -q 'DNS:portal.lab.internal' && echo "$T" | grep -q 'DNS:www.portal.lab.internal'; }
+c2() { echo "$SC" | grep -q 'Verify return code: 0 (ok)'; }
+c3() { S=$(echo "$LEAF" | openssl x509 -noout -ext subjectAltName) && echo "$S" | grep -q 'DNS:portal.lab.internal' && echo "$S" | grep -q 'DNS:www.portal.lab.internal'; }
+c4() { s=$(date -d "$(echo "$LEAF" | openssl x509 -noout -startdate | cut -d= -f2)" +%s); e=$(date -d "$(echo "$LEAF" | openssl x509 -noout -enddate | cut -d= -f2)" +%s); d=$(( (e - s) / 86400 )); [ "$d" -ge 88 ] && [ "$d" -le 92 ]; }
+c5() { m=$(stat -c '%a' /etc/portal-tls/key.pem); [ "$m" = 600 ] || [ "$m" = 400 ]; }
+chk "CSR valide avec CN et SAN" c1
+chk "certificat servi signé par la CA interne" c2
+chk "SAN du certificat servi" c3
+chk "validité de 90 jours" c4
+chk "clé privée protégée" c5
 step_end
