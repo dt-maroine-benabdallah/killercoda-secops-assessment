@@ -1,8 +1,8 @@
-# Sécurité : un compte administrateur illégitime
+# Sécurité : un compte de déploiement trop puissant
 
-Un audit des comptes locaux signale qu'un compte dispose de droits d'administration alors qu'il ne devrait pas. Seuls `root` et `sysadmin` sont autorisés à administrer cette machine.
+Le compte `deploy` sert uniquement à redémarrer le service `inventory` lors des mises en production. Un audit interne affirme pourtant qu'il peut en pratique obtenir un accès root complet sur cette machine.
 
-**Objectif :** identifier ce compte et supprimer ses droits d'administration. Ne touchez pas aux autres comptes.
+**Objectif :** comprendre d'où vient ce risque et le supprimer, sans empêcher `deploy` de redémarrer `inventory`. Ne touchez pas aux autres comptes.
 
 Une seule action corrective est attendue.
 
