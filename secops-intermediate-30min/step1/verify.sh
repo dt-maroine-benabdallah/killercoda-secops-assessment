@@ -16,7 +16,7 @@ PY
 }
 ruleset_blocks() { { iptables-save; nft list ruleset; ufw status; } 2>/dev/null | grep -F '192.0.2.66' | grep -Eiq 'drop|reject|deny'; }
 c1() { ! probe 192.0.2.66 || ruleset_blocks; }
-c2() { probe 192.0.2.10; }
+c2() { c1 && probe 192.0.2.10; }
 chk "attaquant bloqué" c1
 chk "partenaire légitime toujours autorisé" c2
 step_end
