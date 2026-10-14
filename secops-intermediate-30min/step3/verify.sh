@@ -1,13 +1,9 @@
 #!/bin/bash
 . /usr/local/lib/secops-lab/lib.sh
 step_begin 3
-T=$(sshd -T 2>/dev/null)
-c1() { echo "$T" | grep -qx 'permitrootlogin no'; }
-c2() { echo "$T" | grep -qx 'passwordauthentication no'; }
-c3() { n=$(echo "$T" | awk '$1=="maxauthtries"{print $2}'); [ -n "$n" ] && [ "$n" -le 4 ]; }
-c4() { sshd -t; }
-chk "root login interdit" c1
-chk "mot de passe interdit" c2
-chk "MaxAuthTries <= 4" c3
-chk "configuration valide" c4
+IP=$(ip -4 route get 1.1.1.1 | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1);exit}}')
+c1() { curl -fsS -m 3 "http://$IP:8081" >/dev/null; }
+c2() { ! curl -sS -m 3 "http://$IP:9200" >/dev/null 2>&1; }
+chk "inventory joignable" c1
+chk "base interne toujours protégée" c2
 step_end
