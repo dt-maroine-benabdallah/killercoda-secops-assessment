@@ -1,9 +1,9 @@
-# Système : sauvegarde nocturne en échec
+# Sécurité : un compte administrateur illégitime
 
-La sauvegarde de l'application `reporting` devrait s'exécuter chaque nuit à 2h sous le compte système `backup`, mais aucune archive n'apparaît dans `/var/backups/app`.
+Un audit des comptes locaux signale qu'un compte dispose de droits d'administration alors qu'il ne devrait pas. Seuls `root` et `sysadmin` sont autorisés à administrer cette machine.
 
-Les fichiers concernés : `/usr/local/bin/backup-app.sh` et `/etc/cron.d/backup-app`.
+**Objectif :** identifier ce compte et supprimer ses droits d'administration. Ne touchez pas aux autres comptes.
 
-**Objectif :** corriger tous les problèmes pour que la sauvegarde fonctionne réellement, sans affaiblir la sécurité du dépôt de sauvegarde. Vous pouvez lancer la sauvegarde à la main pour tester, avec le compte prévu.
+Une seule action corrective est attendue.
 
 Cliquez sur **CHECK** quand vous avez terminé.
