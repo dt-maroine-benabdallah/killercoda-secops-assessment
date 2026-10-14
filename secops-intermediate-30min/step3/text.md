@@ -1,11 +1,13 @@
-# Sécurité : durcissement SSH
+# Réseau : service injoignable
 
-Le serveur SSH va être exposé sur Internet. Durcissez sa configuration :
+Le service `inventory` écoute sur le port 8081 mais reste injoignable depuis l'adresse IP de la machine :
 
-- interdire la connexion directe de `root`
-- n'autoriser que l'authentification par clé
-- limiter à 4 tentatives d'authentification par connexion
+```
+curl -m 3 http://$(hostname -I | awk '{print $1}'):8081
+```{{exec}}
 
-La configuration doit rester valide (`sshd -t`) et le service ne doit pas être coupé. Seule la configuration **effective** compte.
+**Objectif :** diagnostiquer et rétablir l'accès, sans dégrader la sécurité des autres services de la machine.
+
+Une seule action corrective est attendue.
 
 Cliquez sur **CHECK** quand vous avez terminé.
