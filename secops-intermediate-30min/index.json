@@ -1,0 +1,22 @@
+{
+  "title": "Évaluation SecOps intermédiaire (30 min)",
+  "description": "Six situations de troubleshooting Linux : système, sécurité, réseau. Vérification automatique et score final.",
+  "details": {
+    "intro": {
+      "text": "intro.md",
+      "foreground": "foreground.sh",
+      "background": "background.sh"
+    },
+    "steps": [
+      { "title": "Système : un service qui ne démarre pas", "text": "step1/text.md", "verify": "step1/verify.sh" },
+      { "title": "Système : sauvegarde nocturne en échec", "text": "step2/text.md", "verify": "step2/verify.sh" },
+      { "title": "Sécurité : durcissement SSH", "text": "step3/text.md", "verify": "step3/verify.sh" },
+      { "title": "Sécurité : audit de compromission", "text": "step4/text.md", "verify": "step4/verify.sh" },
+      { "title": "Réseau : service injoignable", "text": "step5/text.md", "verify": "step5/verify.sh" },
+      { "title": "Réseau : résolution de noms et TLS", "text": "step6/text.md", "verify": "step6/verify.sh" }
+    ],
+    "finish": { "text": "finish.md" }
+  },
+  "backend": { "imageid": "ubuntu" },
+  "interface": { "layout": "terminal" }
+}
