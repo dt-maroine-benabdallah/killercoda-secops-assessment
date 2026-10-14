@@ -149,7 +149,7 @@ chmod 600 /opt/ca/ca.key
 openssl req -x509 -newkey rsa:2048 -nodes -days 30 \
   -keyout /etc/portal-tls/key.pem -out /etc/portal-tls/cert.pem \
   -subj "/CN=portal.lab.internal" >/dev/null 2>&1
-chmod 644 /etc/portal-tls/key.pem
+chmod 600 /etc/portal-tls/key.pem
 cat > /etc/portal-tls/server.py <<'EOF'
 import http.server, ssl
 class H(http.server.BaseHTTPRequestHandler):
