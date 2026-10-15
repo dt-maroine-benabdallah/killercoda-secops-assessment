@@ -1,6 +1,6 @@
 # Terminé
 
-Lancez la commande suivante et transmettez la capture d'écran à l'évaluateur :
+Cliquez sur la commande suivante pour afficher votre résultat, puis faites une capture d'écran du terminal et transmettez-la à l'évaluateur :
 
 ```
 score
