@@ -39,23 +39,22 @@ cat > /usr/local/bin/score <<'EOF'
 #!/bin/bash
 R=/var/lib/secops-lab
 . /usr/local/lib/secops-lab/lib.sh
-labels=("Sécurité : SFTP attaqué" "Sécurité : compte trop puissant" "Réseau   : service injoignable" "IaC      : revue Terraform" "Bonus    : CSR et certificat")
+labels=("Sécurité : SFTP attaqué" "Sécurité : compte trop puissant" "Réseau   : service injoignable" "IaC      : revue Terraform" "PKI      : CSR et certificat")
 max=(2 2 2 2 5)
 start=$(cat $R/start 2>/dev/null || date +%s)
 mins=$(( ($(date +%s) - start) / 60 ))
-core=0; bonus=0; lines=""; done_n=0
+total=0; lines=""; done_n=0
 for i in 1 2 3 4 5; do
   r=$(cat $R/step$i 2>/dev/null || echo "-")
   p=${r%%/*}; [ "$r" = "-" ] && p=0 || done_n=$((done_n+1))
-  if [ "$i" -le 4 ]; then core=$((core+p)); else bonus=$p; fi
+  total=$((total+p))
   lines+=$(printf "Étape %s  %-32s %s/%s" "$i" "${labels[$((i-1))]}" "$p" "${max[$((i-1))]}")$'\n'
 done
 echo "Temps écoulé : $mins min"
 echo
 printf '%s' "$lines"
 echo
-echo "Score socle : $core/8"
-echo "Bonus       : $bonus/5"
+echo "Score total : $total/13"
 EOF
 chmod +x /usr/local/bin/score
 
