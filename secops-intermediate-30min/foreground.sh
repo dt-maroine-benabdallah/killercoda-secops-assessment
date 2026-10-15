@@ -4,6 +4,6 @@ while [ ! -f /tmp/.secops-setup-done ]; do sleep 1; done
 clear
 echo "Environnement prêt."
 echo
-echo ">>> Avant de commencer, saisissez le code candidat remis par l'évaluateur :"
-echo ">>>   candidat VOTRE_CODE"
+echo "Avant de commencer le test et d'appuyer sur START, merci d'exécuter ce script pour identifier votre session :"
+echo "exemple : start_test.sh \"Benoit Dupont\""
 echo
