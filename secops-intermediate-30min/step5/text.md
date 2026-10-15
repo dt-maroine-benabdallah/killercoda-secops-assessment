@@ -14,7 +14,7 @@ Le serveur recharge ces fichiers à chaque connexion, aucun redémarrage n'est n
 curl --cacert /opt/ca/ca.crt --resolve portal.lab.internal:8443:127.0.0.1 https://portal.lab.internal:8443
 ```{{exec}}
 
-**Aide :** la mémorisation des options `openssl› n'est pas évaluée. Voici des modèles de commandes à adapter (valeurs entre `<...>›), et `openssl req -help› ou `openssl x509 -help› listent toutes les options.
+**Aide :** la mémorisation des options `openssl` n'est pas évaluée. Voici des modèles de commandes à adapter (valeurs entre `<...>`), et `openssl req -help` ou `openssl x509 -help` listent toutes les options.
 
 Génération de la clé et de la CSR :
 
@@ -28,6 +28,6 @@ Signature de la CSR par la CA :
 openssl x509 -req -in <fichier csr> -CA <ca.crt> -CAkey <ca.key> -CAcreateserial -days <durée> -copy_extensions copy -out <fichier certificat>
 ```
 
-Pour vérifier le contenu d'une CSR ou d'un certificat : `openssl req -in <csr> -noout -text› et `openssl x509 -in <cert> -noout -text›.
+Pour vérifier le contenu d'une CSR ou d'un certificat : `openssl req -in <csr> -noout -text` et `openssl x509 -in <cert> -noout -text`.
 
 Cliquez sur **CHECK** quand vous avez terminé.
