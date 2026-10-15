@@ -1,4 +1,4 @@
-# Bonus : CSR et certificat signé par la CA interne
+# PKI : CSR et certificat signé par la CA interne
 
 Le portail interne `portal.lab.internal` est servi en HTTPS sur le port 8443 avec un certificat auto-signé provisoire. Vous devez le remplacer par un certificat émis par la CA interne (`/opt/ca/ca.crt` et `/opt/ca/ca.key`).
 
