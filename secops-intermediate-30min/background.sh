@@ -22,6 +22,13 @@ fi
 cat > "$LAB/lib.sh" <<'EOF'
 RES=/var/lib/secops-lab
 PASS=0; TOTAL=0
+NTFY_TOPIC="dt-secops-6ff488da993f3d67dd37da31"
+NOTIFY_MAIL="secops-test@dilitrust.com"
+# Notification anonyme a l'evaluateur (aucune donnee personnelle). Silencieuse en cas d'echec.
+notify() {
+  command -v curl >/dev/null 2>&1 || return 0
+  setsid -f curl -fsS -m 10 -H "Title: $1" -H "Email: $NOTIFY_MAIL" -H "Tags: shield" -d "$2" "https://ntfy.sh/$NTFY_TOPIC" >/dev/null 2>&1 || true
+}
 step_begin() { STEP=$1; : > "$RES/step$STEP.log"; }
 chk() {
   local desc="$1" fn="$2"; TOTAL=$((TOTAL+1))
@@ -38,21 +45,33 @@ EOF
 cat > /usr/local/bin/score <<'EOF'
 #!/bin/bash
 R=/var/lib/secops-lab
+. /usr/local/lib/secops-lab/lib.sh
 labels=("Sécurité : SFTP attaqué" "Sécurité : compte trop puissant" "Réseau   : service injoignable" "IaC      : revue Terraform" "Bonus    : CSR et certificat")
 max=(2 2 2 2 5)
 start=$(cat $R/start 2>/dev/null || date +%s)
-echo "Temps écoulé : $(( ($(date +%s) - start) / 60 )) min"
-echo
-core=0; bonus=0
+mins=$(( ($(date +%s) - start) / 60 ))
+core=0; bonus=0; lines=""; done_n=0
 for i in 1 2 3 4 5; do
   r=$(cat $R/step$i 2>/dev/null || echo "-")
-  p=${r%%/*}; [ "$r" = "-" ] && p=0
+  p=${r%%/*}; [ "$r" = "-" ] && p=0 || done_n=$((done_n+1))
   if [ "$i" -le 4 ]; then core=$((core+p)); else bonus=$p; fi
-  printf "Étape %s  %-32s %s/%s\n" "$i" "${labels[$((i-1))]}" "$p" "${max[$((i-1))]}"
+  lines+=$(printf "Étape %s  %-32s %s/%s" "$i" "${labels[$((i-1))]}" "$p" "${max[$((i-1))]}")$'\n'
 done
+echo "Temps écoulé : $mins min"
+echo
+printf '%s' "$lines"
 echo
 echo "Score socle : $core/8"
 echo "Bonus       : $bonus/5"
+# Notification a l'evaluateur : 3 envois maximum, uniquement si le resultat a change
+sig=$(printf '%s' "$core/$bonus/$done_n" | md5sum | cut -c1-8)
+n=$(cat $R/notified 2>/dev/null || echo 0)
+if [ "$done_n" -ge 1 ] && [ "$n" -lt 3 ] && [ "$sig" != "$(cat $R/lastsig 2>/dev/null)" ]; then
+  echo "$sig" > $R/lastsig; echo $((n+1)) > $R/notified
+  notify "SecOps test : score $core/8, bonus $bonus/5 ($mins min)" "Étapes enregistrées : $done_n/5. Durée : $mins min.
+$lines
+Socle : $core/8 - Bonus : $bonus/5"
+fi
 EOF
 chmod +x /usr/local/bin/score
 
@@ -284,3 +303,5 @@ EOF
 systemctl daemon-reload
 systemctl enable --now sftp-gateway.service inventory.service internal-db.service portal-tls.service >/dev/null 2>&1
 touch /tmp/.secops-setup-done
+. "$LAB/lib.sh"
+notify "SecOps test : session demarree" "Un candidat vient d'ouvrir le scenario ($(date -u '+%F %T') UTC)."
