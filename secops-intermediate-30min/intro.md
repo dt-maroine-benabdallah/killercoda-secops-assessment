@@ -10,4 +10,4 @@ Vous êtes d'astreinte sur un serveur Ubuntu 24.04. Vous êtes `root` sur la mac
 - La commande `score` affiche votre avancement à tout moment.
 - Les pages de manuel (`man`) et la documentation officielle sont autorisées. Pas d'outils de scan réseau ni de bruteforce (interdits par les CGU de Killercoda).
 - Expliquez à voix haute votre démarche si un évaluateur est présent : elle compte autant que le résultat.
-- Votre code candidat, le démarrage, le score et la durée sont transmis à l'évaluateur. Si le code n'a pas été pris en compte au démarrage, saisissez `candidat VOTRE_CODE` dans le terminal.
+- **Dès le début**, saisissez dans le terminal `candidat VOTRE_CODE` (code remis par l'évaluateur) : cela lance le chronomètre. Votre code, le démarrage, le score et la durée sont transmis à l'évaluateur.
