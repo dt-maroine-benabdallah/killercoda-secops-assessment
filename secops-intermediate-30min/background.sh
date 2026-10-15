@@ -43,7 +43,6 @@ labels=("Sécurité : SFTP attaqué" "Sécurité : compte trop puissant" "Résea
 max=(2 2 2 2 5)
 start=$(cat $R/start 2>/dev/null || date +%s)
 mins=$(( ($(date +%s) - start) / 60 ))
-cand=$(cat $R/candidate 2>/dev/null || echo non-renseigne)
 core=0; bonus=0; lines=""; done_n=0
 for i in 1 2 3 4 5; do
   r=$(cat $R/step$i 2>/dev/null || echo "-")
@@ -51,7 +50,6 @@ for i in 1 2 3 4 5; do
   if [ "$i" -le 4 ]; then core=$((core+p)); else bonus=$p; fi
   lines+=$(printf "Étape %s  %-32s %s/%s" "$i" "${labels[$((i-1))]}" "$p" "${max[$((i-1))]}")$'\n'
 done
-echo "Candidat : $cand"
 echo "Temps écoulé : $mins min"
 echo
 printf '%s' "$lines"
@@ -59,18 +57,7 @@ echo
 echo "Score socle : $core/8"
 echo "Bonus       : $bonus/5"
 EOF
-cat > /root/start_test.sh <<'EOF'
-#!/bin/bash
-R=/var/lib/secops-lab
-name=$(printf '%s' "$*" | LC_ALL=C.UTF-8 sed -E "s/[^[:alpha:] '.-]//g" | cut -c1-40)
-if [ -z "$name" ]; then echo 'Usage : start_test.sh "Prénom Nom"'; exit 1; fi
-first=0; [ -f $R/candidate ] || first=1
-echo "$name" > $R/candidate
-[ "$first" = 1 ] && date +%s > $R/start
-echo "Merci $name, votre session est identifiée. Vous pouvez maintenant appuyer sur START."
-EOF
-chmod +x /root/start_test.sh /usr/local/bin/score
-ln -sf /root/start_test.sh /usr/local/bin/start_test.sh
+chmod +x /usr/local/bin/score
 
 # --- Étape 1 : SFTP attaqué ------------------------------------------------------
 # Adresses de test sur lo : attaquant, partenaire légitime, bruit légitime
@@ -80,6 +67,7 @@ ip addr replace 192.0.2.77/32 dev lo
 id partner1 >/dev/null 2>&1 || useradd -m -s /usr/sbin/nologin partner1
 ssh-keygen -A >/dev/null 2>&1
 cat > /etc/ssh/sftp_gateway_config <<'EOF'
+# Service SFTP partenaires - journal d'authentification : /var/log/sftp-gateway/auth.log
 Port 2222
 ListenAddress 0.0.0.0
 HostKey /etc/ssh/ssh_host_ed25519_key
