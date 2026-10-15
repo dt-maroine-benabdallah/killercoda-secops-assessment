@@ -51,6 +51,7 @@ max=(2 2 2 2 5)
 start=$(cat $R/start 2>/dev/null || date +%s)
 mins=$(( ($(date +%s) - start) / 60 ))
 cand=$(cat $R/candidate 2>/dev/null || echo non-renseigne)
+cand_a=$(printf '%s' "$cand" | iconv -f UTF-8 -t ASCII//TRANSLIT 2>/dev/null | tr -cd 'A-Za-z0-9 .-')
 core=0; bonus=0; lines=""; done_n=0
 for i in 1 2 3 4 5; do
   r=$(cat $R/step$i 2>/dev/null || echo "-")
@@ -69,22 +70,25 @@ sig=$(printf '%s' "$core/$bonus/$done_n" | md5sum | cut -c1-8)
 n=$(cat $R/notified 2>/dev/null || echo 0)
 if [ "$done_n" -ge 1 ] && [ "$n" -lt 2 ] && [ "$sig" != "$(cat $R/lastsig 2>/dev/null)" ]; then
   echo "$sig" > $R/lastsig; echo $((n+1)) > $R/notified
-  notify "SecOps test [$cand] : score $core/8, bonus $bonus/5 ($mins min)" "Candidat : $cand. Étapes enregistrées : $done_n/5. Durée : $mins min.
+  notify "SecOps test [$cand_a] : score $core/8, bonus $bonus/5 ($mins min)" "Candidat : $cand. Étapes enregistrées : $done_n/5. Durée : $mins min.
 $lines
 Socle : $core/8 - Bonus : $bonus/5"
 fi
 EOF
-cat > /usr/local/bin/candidat <<'EOF'
+cat > /root/start_test.sh <<'EOF'
 #!/bin/bash
-code=$(printf '%s' "$1" | tr -cd 'A-Za-z0-9_-' | cut -c1-20)
-[ -n "$code" ] || { echo "Usage : candidat CODE"; exit 1; }
-[ -f /var/lib/secops-lab/candidate ] || date +%s > /var/lib/secops-lab/start
-echo "$code" > /var/lib/secops-lab/candidate
+R=/var/lib/secops-lab
+name=$(printf '%s' "$*" | LC_ALL=C.UTF-8 sed -E "s/[^[:alpha:] '.-]//g" | cut -c1-40)
+if [ -z "$name" ]; then echo 'Usage : start_test.sh "Prénom Nom"'; exit 1; fi
+first=0; [ -f $R/candidate ] || first=1
+echo "$name" > $R/candidate
+[ "$first" = 1 ] && date +%s > $R/start
 . /usr/local/lib/secops-lab/lib.sh
-notify "SecOps test : code candidat $code" "Candidat : $code (code saisi apres le demarrage)."
-echo "Code enregistré : $code"
+notify "SecOps test : session identifiee" "Candidat : $name. Session ouverte le $(date -u '+%F %T') UTC."
+echo "Merci $name, votre session est identifiée. Vous pouvez maintenant appuyer sur START."
 EOF
-chmod +x /usr/local/bin/score /usr/local/bin/candidat
+chmod +x /root/start_test.sh /usr/local/bin/score
+ln -sf /root/start_test.sh /usr/local/bin/start_test.sh
 
 # --- Étape 1 : SFTP attaqué ------------------------------------------------------
 # Adresses de test sur lo : attaquant, partenaire légitime, bruit légitime
