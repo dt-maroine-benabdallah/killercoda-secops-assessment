@@ -5,7 +5,7 @@ S=/usr/local/bin/restart-inventory.sh
 cmds() { sudo -l -U deploy 2>&1 | sed -n '/following commands/,$p' | tail -n +2 | sed -E 's/^[[:space:]]*\([^)]*\)[[:space:]]*//; s/^NOPASSWD:[[:space:]]*//; s/^[[:alpha:]_]+:[[:space:]]*//'; }
 c1() {
   ! cmds | grep -Eq '(^|[ /,])(vim?|vi|less|more|nano|ed|man|bash|sh|dash|find|awk|python3?|env|ALL)([ ,]|$)|\*' || return 1
-  [ ! -e "$S" ] || ! runuser -u deploy -- test -w "$S"
+  if sudo -l -U deploy "$S" >/dev/null 2>&1; then ! runuser -u deploy -- test -w "$S"; fi
 }
 c2() {
   c1 || return 1
