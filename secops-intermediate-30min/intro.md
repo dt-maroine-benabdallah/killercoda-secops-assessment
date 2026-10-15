@@ -10,4 +10,4 @@ Vous êtes d'astreinte sur un serveur Ubuntu 24.04. Vous êtes `root` sur la mac
 - La commande `score` affiche votre avancement à tout moment.
 - Les pages de manuel (`man`) et la documentation officielle sont autorisées. Pas d'outils de scan réseau ni de bruteforce (interdits par les CGU de Killercoda).
 - Expliquez à voix haute votre démarche si un évaluateur est présent : elle compte autant que le résultat.
-- **Avant d'appuyer sur START**, exécutez dans le terminal `start_test.sh "Prénom Nom"` pour identifier votre session : cela lance le chronomètre. Votre nom, le démarrage, le score et la durée sont transmis à l'évaluateur.
+- **Avant d'appuyer sur START**, exécutez dans le terminal `start_test.sh "Prénom Nom"` pour identifier votre session : cela lance le chronomètre. Votre nom, votre score et la durée s'afficheront sur la page finale.
