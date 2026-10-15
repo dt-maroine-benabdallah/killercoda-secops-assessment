@@ -67,7 +67,7 @@ echo "Bonus       : $bonus/5"
 # Notification a l'evaluateur : 3 envois maximum, uniquement si le resultat a change
 sig=$(printf '%s' "$core/$bonus/$done_n" | md5sum | cut -c1-8)
 n=$(cat $R/notified 2>/dev/null || echo 0)
-if [ "$done_n" -ge 1 ] && [ "$n" -lt 3 ] && [ "$sig" != "$(cat $R/lastsig 2>/dev/null)" ]; then
+if [ "$done_n" -ge 1 ] && [ "$n" -lt 2 ] && [ "$sig" != "$(cat $R/lastsig 2>/dev/null)" ]; then
   echo "$sig" > $R/lastsig; echo $((n+1)) > $R/notified
   notify "SecOps test [$cand] : score $core/8, bonus $bonus/5 ($mins min)" "Candidat : $cand. Étapes enregistrées : $done_n/5. Durée : $mins min.
 $lines
@@ -78,6 +78,7 @@ cat > /usr/local/bin/candidat <<'EOF'
 #!/bin/bash
 code=$(printf '%s' "$1" | tr -cd 'A-Za-z0-9_-' | cut -c1-20)
 [ -n "$code" ] || { echo "Usage : candidat CODE"; exit 1; }
+[ -f /var/lib/secops-lab/candidate ] || date +%s > /var/lib/secops-lab/start
 echo "$code" > /var/lib/secops-lab/candidate
 . /usr/local/lib/secops-lab/lib.sh
 notify "SecOps test : code candidat $code" "Candidat : $code (code saisi apres le demarrage)."
@@ -313,3 +314,5 @@ EOF
 systemctl daemon-reload
 systemctl enable --now sftp-gateway.service inventory.service internal-db.service portal-tls.service >/dev/null 2>&1
 touch /tmp/.secops-setup-done
+. "$LAB/lib.sh"
+notify "SecOps test : session demarree" "Une session vient d'etre ouverte le $(date -u '+%F %T') UTC. Le code candidat n'est pas encore saisi."
