@@ -10,3 +10,4 @@ Vous êtes d'astreinte sur un serveur Ubuntu 24.04. Vous êtes `root` sur la mac
 - La commande `score` affiche votre avancement à tout moment.
 - Les pages de manuel (`man`) et la documentation officielle sont autorisées. Pas d'outils de scan réseau ni de bruteforce (interdits par les CGU de Killercoda).
 - Expliquez à voix haute votre démarche si un évaluateur est présent : elle compte autant que le résultat.
+- Des informations anonymes (démarrage, score, durée) sont transmises à l'évaluateur.
